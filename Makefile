@@ -37,6 +37,7 @@ BUILD_DIR = build
 # C sources
 C_SOURCES =  \
 Src/main.c \
+Src/touch.c \
 Src/stm32l4xx_it.c \
 Src/stm32l4xx_hal_msp.c \
 Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.c \
@@ -101,9 +102,39 @@ Drivers/lvgl/src/lv_draw/lv_img_buf.c \
 Drivers/lvgl/src/lv_font/lv_font_montserrat_16.c \
 Drivers/lvgl/src/lv_font/lv_font_fmt_txt.c \
 Drivers/lvgl/src/lv_font/lv_font.c \
-Drivers/lvgl/src/lv_widgets/lv_label.c \
+Drivers/lvgl/src/lv_widgets/lv_arc.c \
+Drivers/lvgl/src/lv_widgets/lv_bar.c \
 Drivers/lvgl/src/lv_widgets/lv_btn.c \
+Drivers/lvgl/src/lv_widgets/lv_btnmatrix.c \
+Drivers/lvgl/src/lv_widgets/lv_calendar.c \
+Drivers/lvgl/src/lv_widgets/lv_canvas.c \
+Drivers/lvgl/src/lv_widgets/lv_chart.c \
+Drivers/lvgl/src/lv_widgets/lv_checkbox.c \
 Drivers/lvgl/src/lv_widgets/lv_cont.c \
+Drivers/lvgl/src/lv_widgets/lv_cpicker.c \
+Drivers/lvgl/src/lv_widgets/lv_dropdown.c \
+Drivers/lvgl/src/lv_widgets/lv_gauge.c \
+Drivers/lvgl/src/lv_widgets/lv_imgbtn.c \
+Drivers/lvgl/src/lv_widgets/lv_keyboard.c \
+Drivers/lvgl/src/lv_widgets/lv_label.c \
+Drivers/lvgl/src/lv_widgets/lv_led.c \
+Drivers/lvgl/src/lv_widgets/lv_line.c \
+Drivers/lvgl/src/lv_widgets/lv_linemeter.c \
+Drivers/lvgl/src/lv_widgets/lv_list.c \
+Drivers/lvgl/src/lv_widgets/lv_msgbox.c \
+Drivers/lvgl/src/lv_widgets/lv_objmask.c \
+Drivers/lvgl/src/lv_widgets/lv_objx_templ.c \
+Drivers/lvgl/src/lv_widgets/lv_page.c \
+Drivers/lvgl/src/lv_widgets/lv_roller.c \
+Drivers/lvgl/src/lv_widgets/lv_slider.c \
+Drivers/lvgl/src/lv_widgets/lv_spinbox.c \
+Drivers/lvgl/src/lv_widgets/lv_spinner.c \
+Drivers/lvgl/src/lv_widgets/lv_switch.c \
+Drivers/lvgl/src/lv_widgets/lv_table.c \
+Drivers/lvgl/src/lv_widgets/lv_tabview.c \
+Drivers/lvgl/src/lv_widgets/lv_textarea.c \
+Drivers/lvgl/src/lv_widgets/lv_tileview.c \
+Drivers/lvgl/src/lv_widgets/lv_win.c \
 Drivers/tft/tft.c
 
 # ASM sources

@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "lvgl.h"
 #include "tft.h"
+#include "touch.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -156,6 +157,12 @@ int main(void)
   lv_obj_set_pos(clock, 730, 10);                            /*Set its position*/
 
 
+  touch_init();
+  lv_indev_drv_t indev_drv;
+  lv_indev_drv_init(&indev_drv);
+  indev_drv.type = LV_INDEV_TYPE_POINTER;
+  indev_drv.read_cb = touch_poll;
+  lv_indev_t * my_indev = lv_indev_drv_register(&indev_drv);
   while (1)
   {
     lv_task_handler();
