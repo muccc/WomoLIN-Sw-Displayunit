@@ -38,6 +38,8 @@ BUILD_DIR = build
 C_SOURCES =  \
 Src/main.c \
 Src/touch.c \
+Src/ui.c \
+Src/clut.c \
 Src/stm32l4xx_it.c \
 Src/stm32l4xx_hal_msp.c \
 Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.c \
