@@ -48,6 +48,8 @@ I2C_HandleTypeDef hi2c2;
 
 LTDC_HandleTypeDef hltdc;
 
+OSPI_HandleTypeDef hospi1;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -57,14 +59,15 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_LTDC_Init(void);
 static void MX_I2C2_Init(void);
+static void MX_OCTOSPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+//volatile uint8_t framebuffer[LV_HOR_RES_MAX*LV_VER_RES_MAX] __attribute__ ((section (".sram")));
 volatile uint8_t framebuffer[LV_HOR_RES_MAX*LV_VER_RES_MAX];
-
 /* USER CODE END 0 */
 
 /**
@@ -74,9 +77,7 @@ volatile uint8_t framebuffer[LV_HOR_RES_MAX*LV_VER_RES_MAX];
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  // for(int i = 0;i<50*50*3;i++){
-  //   framebuffer[i] = 200;
-  // }
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -99,6 +100,7 @@ int main(void)
   MX_GPIO_Init();
   MX_LTDC_Init();
   MX_I2C2_Init();
+  MX_OCTOSPI1_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_Port,LCD_BL_CTRL_Pin,GPIO_PIN_SET);
 
@@ -167,8 +169,10 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C2|RCC_PERIPHCLK_LTDC;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C2|RCC_PERIPHCLK_OSPI
+                              |RCC_PERIPHCLK_LTDC;
   PeriphClkInit.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
+  PeriphClkInit.OspiClockSelection = RCC_OSPICLKSOURCE_SYSCLK;
   PeriphClkInit.LtdcClockSelection = RCC_LTDCCLKSOURCE_PLLSAI2_DIV2;
   PeriphClkInit.PLLSAI2.PLLSAI2Source = RCC_PLLSOURCE_HSE;
   PeriphClkInit.PLLSAI2.PLLSAI2M = 2;
@@ -294,6 +298,84 @@ static void MX_LTDC_Init(void)
 }
 
 /**
+  * @brief OCTOSPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_OCTOSPI1_Init(void)
+{
+
+  /* USER CODE BEGIN OCTOSPI1_Init 0 */
+
+  /* USER CODE END OCTOSPI1_Init 0 */
+
+  OSPIM_CfgTypeDef OSPIM_Cfg_Struct = {0};
+  OSPI_HyperbusCfgTypeDef sHyperBusCfg = {0};
+
+  /* USER CODE BEGIN OCTOSPI1_Init 1 */
+
+  /* USER CODE END OCTOSPI1_Init 1 */
+  /* OCTOSPI1 parameter configuration*/
+  hospi1.Instance = OCTOSPI1;
+  hospi1.Init.FifoThreshold = 4;
+  hospi1.Init.DualQuad = HAL_OSPI_DUALQUAD_DISABLE;
+  hospi1.Init.MemoryType = HAL_OSPI_MEMTYPE_HYPERBUS;
+  hospi1.Init.DeviceSize = 32;
+  hospi1.Init.ChipSelectHighTime = 1;
+  hospi1.Init.FreeRunningClock = HAL_OSPI_FREERUNCLK_DISABLE;
+  hospi1.Init.ClockMode = HAL_OSPI_CLOCK_MODE_0;
+  hospi1.Init.ClockPrescaler = 3;
+  hospi1.Init.SampleShifting = HAL_OSPI_SAMPLE_SHIFTING_NONE;
+  hospi1.Init.DelayHoldQuarterCycle = HAL_OSPI_DHQC_ENABLE;
+  hospi1.Init.ChipSelectBoundary = 0;
+  hospi1.Init.DelayBlockBypass = HAL_OSPI_DELAY_BLOCK_USED;
+  if (HAL_OSPI_Init(&hospi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  OSPIM_Cfg_Struct.ClkPort = 2;
+  OSPIM_Cfg_Struct.DQSPort = 2;
+  OSPIM_Cfg_Struct.NCSPort = 2;
+  OSPIM_Cfg_Struct.IOLowPort = HAL_OSPIM_IOPORT_2_LOW;
+  OSPIM_Cfg_Struct.IOHighPort = HAL_OSPIM_IOPORT_2_HIGH;
+  if (HAL_OSPIM_Config(&hospi1, &OSPIM_Cfg_Struct, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sHyperBusCfg.RWRecoveryTime = 3;
+  sHyperBusCfg.AccessTime = 6;
+  sHyperBusCfg.WriteZeroLatency = HAL_OSPI_LATENCY_ON_WRITE;
+  sHyperBusCfg.LatencyMode = HAL_OSPI_FIXED_LATENCY;
+  if (HAL_OSPI_HyperbusCfg(&hospi1, &sHyperBusCfg, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN OCTOSPI1_Init 2 */
+  /* Memory-mapped mode configuration --------------------------------------- */
+  OSPI_HyperbusCmdTypeDef sCommand;
+  OSPI_MemoryMappedTypeDef sMemMappedCfg;
+  sCommand.AddressSpace = HAL_OSPI_MEMORY_ADDRESS_SPACE;
+  sCommand.AddressSize  = HAL_OSPI_ADDRESS_32_BITS;
+  sCommand.DQSMode      = HAL_OSPI_DQS_ENABLE;
+  sCommand.Address      = 0;
+  sCommand.NbData       = 1;
+  
+  if (HAL_OSPI_HyperbusCmd(&hospi1, &sCommand, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  
+  sMemMappedCfg.TimeOutActivation = HAL_OSPI_TIMEOUT_COUNTER_DISABLE;
+  
+  if (HAL_OSPI_MemoryMapped(&hospi1, &sMemMappedCfg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE END OCTOSPI1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -305,10 +387,13 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  HAL_PWREx_EnableVddIO2();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
