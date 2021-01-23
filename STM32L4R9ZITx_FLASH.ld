@@ -58,12 +58,19 @@ _estack = 0x200A0000;    /* end of RAM */
 _Min_Heap_Size = 0x200;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
+/*
+192 Kbytes SRAM1 0x2000 0000
+64  Kbytes SRAM2 0x2003 0000
+384 Kbytes SRAM3 0x2004 0000
+*/
+
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 640K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 2048K
-SDRAM (rw)     : ORIGIN = 0x90000000, LENGTH = 2048k
+RAM (xrw)     : ORIGIN = 0x20000000, LENGTH = 192K
+FLASH (rx)    : ORIGIN = 0x8000000,  LENGTH = 2048K
+SRAM3 (rw)    : ORIGIN = 0x20040000, LENGTH = 384k
+QSPIRAM (rw)  : ORIGIN = 0x90000000, LENGTH = 2048k
 }
 
 /* Define output sections */
@@ -188,10 +195,15 @@ SECTIONS
     . = ALIGN(8);
   } >RAM
 
-.sram (NOLOAD) :
+.sram3 (NOLOAD) :
 {
 . = ALIGN(8);
-} >SDRAM
+} >SRAM3
+
+.qspiram (NOLOAD) :
+{
+. = ALIGN(8);
+} >QSPIRAM
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

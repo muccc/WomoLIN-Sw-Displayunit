@@ -66,8 +66,8 @@ static void MX_OCTOSPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-//volatile uint8_t framebuffer[LV_HOR_RES_MAX*LV_VER_RES_MAX] __attribute__ ((section (".sram")));
-volatile uint8_t framebuffer[LV_HOR_RES_MAX*LV_VER_RES_MAX];
+volatile uint8_t framebuffer[LV_HOR_RES_MAX*LV_VER_RES_MAX] __attribute__ ((section (".sram3")));
+//volatile uint8_t framebuffer[LV_HOR_RES_MAX*LV_VER_RES_MAX] __attribute__ ((section (".qspiram")));
 /* USER CODE END 0 */
 
 /**
