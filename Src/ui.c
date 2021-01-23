@@ -9,7 +9,7 @@
   static lv_obj_t * t3;
   tv = lv_tabview_create(lv_scr_act(), NULL);
   t1 = lv_tabview_add_tab(tv, "IO test");
-  t2 = lv_tabview_add_tab(tv, "Debuvoid ui_init();g");
+  t2 = lv_tabview_add_tab(tv, "Debug");
   t3 = lv_tabview_add_tab(tv, "Log");
 
   lv_obj_t * prev = NULL;
