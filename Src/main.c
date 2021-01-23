@@ -68,6 +68,56 @@ static void MX_OCTOSPI1_Init(void);
 /* USER CODE BEGIN 0 */
 //volatile uint8_t framebuffer[LV_HOR_RES_MAX*LV_VER_RES_MAX] __attribute__ ((section (".sram")));
 volatile uint8_t framebuffer[LV_HOR_RES_MAX*LV_VER_RES_MAX];
+
+//20ms/frame
+uint32_t ypos = 0;
+uint32_t xpos = 0;
+
+#define LINELEN 510
+uint8_t linebuf[LINELEN];
+
+#pragma GCC push_options
+#pragma GCC optimize ("O2")
+static inline void foo(){
+for(xpos = 0;xpos < LINELEN; xpos++){
+  linebuf[xpos] =  (GPIOB->IDR&GPIO_PIN_12)?0x01:0xff;
+  //asm volatile("nop");
+}
+}
+#pragma GCC pop_options
+
+void EXTI15_10_IRQHandler(){
+__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_11);
+
+if((GPIOB->IDR & GPIO_PIN_10)){
+  ypos = 0;
+  return;
+}else{
+  ypos+=1;
+}
+if(ypos >= LV_VER_RES_MAX){//288
+  //ypos = 0;
+  return;
+}
+
+GPIOG->BSRR = GPIO_PIN_7;
+
+__disable_irq();
+foo();
+__enable_irq();
+
+//memcpy(framebuffer+ypos*LV_HOR_RES_MAX,linebuf,LINELEN);
+DMA2->IFCR = DMA_IFCR_CTCIF1;
+DMA2_Channel1->CCR &= ~ DMA_CCR_EN;
+DMA2->IFCR = DMA_IFCR_CTCIF1;
+DMA2_Channel1->CNDTR = LINELEN;
+DMA2_Channel1->CMAR = framebuffer+ypos*LV_HOR_RES_MAX;
+DMA2_Channel1->CPAR = linebuf;
+DMA2_Channel1->CCR |= DMA_CCR_EN;
+
+GPIOG->BRR = GPIO_PIN_7;
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -103,6 +153,46 @@ int main(void)
   MX_OCTOSPI1_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_Port,LCD_BL_CTRL_Pin,GPIO_PIN_SET);
+
+  //PB10 vsync
+  //PB11 hsync
+  //PB12 signal
+  //PG7 debug out
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn,0,0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+  NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
+
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+  //TIM1->ARR = 50;
+  //TIM1->CR1 |= TIM_CR1_CEN;
+  //TIM1->DIER |= TIM_DIER_UIE;
+  //HAL_NVIC_SetPriority(TIM1_UP_TIM16_IRQn,0,0);
+  //HAL_NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
+  __HAL_RCC_DMA1_CLK_ENABLE();
+  __HAL_RCC_DMA2_CLK_ENABLE();
+  DMA2_Channel1->CCR = DMA_CCR_MEM2MEM | DMA_CCR_PL_0 | DMA_CCR_PL_1 | DMA_CCR_MINC | DMA_CCR_PINC;
+  memset(framebuffer,0x00,sizeof(framebuffer));
+
+
+  while(1);
 
   lv_init();
   tft_init();
